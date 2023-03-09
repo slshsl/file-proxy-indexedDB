@@ -1,5 +1,6 @@
 importScripts("./IDB.js");
 
+// 打开indexDB
 const db = new IDB("res-img", 1, {
   onupgradeneeded: (e) => {
     const db = e.target.result;
@@ -16,7 +17,7 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("activate", (event) => {
-  clients.claim();
+  event.waitUntil(clients.claim());
 });
 
 self.addEventListener("fetch", (e) => {

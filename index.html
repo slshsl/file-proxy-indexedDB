@@ -17,18 +17,26 @@
       if (navigator.serviceWorker.controller) {
         getUploads().then(renderUploads);
       }
-
+      // 注册粘贴事件
       document.addEventListener("paste", pasteToUpload);
+      // 注册拖放事件
       document.addEventListener("drop", dropToUpload);
+
       document.ondragover = (e) => {
         e.preventDefault();
       };
+
       document
         .getElementById("upload_list")
         .addEventListener("click", function (e) {
-          removeUploadsImg(e, () => getUploads().then(renderUploads));
+          // 删除图片请求
+          removeUploadsImg(e, () => {
+            // 更新图片列表
+            getUploads().then(renderUploads);
+          });
         });
 
+      // 拖拽图片至页面，发起图片请求
       function pasteToUpload({ clipboardData: { items } }) {
         for (let i = 0; i < items.length; i++) {
           if (items[i].type.indexOf("image") !== -1) {
@@ -42,6 +50,7 @@
         }
       }
 
+      // 拖拽图片至页面，获取图片文件
       function dropToUpload(e) {
         e.preventDefault();
         const file = e.dataTransfer.files[0];
@@ -54,6 +63,7 @@
         }
       }
 
+      // 发起请求，被service截获，转存到indexDB中，并返回随机图片名称
       function uploadImg(file) {
         const data = new FormData();
 
@@ -66,16 +76,20 @@
         }).then((data) => data.json());
       }
 
+      // 将预览img的src设置为从图片名称，接着触发请求，被service worker截获，service work中根据图片名称
+      // 去indexDB中查找对应的图片文件，然后响应该文件
       function renderUploadImg(data) {
         const preview = document.getElementById("preview");
 
         preview.src = data.name;
       }
 
+      // 发起请求，被service worker截获，service worker中indexDB查找所有被缓存的图片，响应刘表信息
       function getUploads() {
         return fetch("get-uploads.json").then((data) => data.json());
       }
 
+      // 更新已上传至indexDB的图片列表
       function renderUploads(data) {
         const upload_list = document.getElementById("upload_list");
         let items = "";
@@ -95,6 +109,7 @@
         upload_list.innerHTML = items;
       }
 
+      //发起删除图片请求，被servie worker 截获，service worker从indexDB中删除缓存图片
       function removeUploadsImg(e, callback) {
         const id = e.target.dataset.id;
         if (!id) {
@@ -108,3 +123,9 @@
     </script>
   </body>
 </html>
+<!-- 
+    在一些安全场景，或者一些本地化的场景（如本地化的 Markdown 记事本），
+    如果有图片上传并需要查看的场景，在不上传到服务器的情况下，实现这个效果，
+    通常是把图片 Base64 化，但编码后的字符串会非常长，体验较差。
+    这里不妨尝试使用 ServiceWorker + IndexedDB 来解决这个问题。 
+-->

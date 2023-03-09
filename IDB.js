@@ -20,10 +20,12 @@ class IDB {
     if (this._db) return;
     this._db = await new Promise((resolve, reject) => {
       let openRequestTimedOut = false;
+
       setTimeout(() => {
         openRequestTimedOut = true;
         reject(new Error("The open request was blocked and timed out"));
       }, this.OPEN_TIMEOUT);
+
       const openRequest = indexedDB.open(this._name, this._version);
 
       openRequest.onerror = () => reject(openRequest.error);
@@ -164,6 +166,7 @@ class IDB {
 
 IDB.prototype.OPEN_TIMEOUT = 2000;
 
+//
 (function () {
   const methodsToWrap = {
     readonly: ["get", "count", "getKey", "getAll", "getAllKeys"],
